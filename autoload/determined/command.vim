@@ -4,7 +4,7 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
   let moreCmd = len(a:0) ? a:1 : ''
   let opts = {}
 
-  let defaults = { 'background': 1, 'vertical': 1, 'autoclose': 1, 'size': '50%', 'reuse': 0 }
+  let defaults = { 'background': 1, 'vertical': 1, 'autoclose': 0, 'reuse': 0, 'expand': 0, 'term_args': {} }
   let args = extend(args, defaults, 'keep')
 
   if args.autoclose
@@ -20,18 +20,20 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
     let opts.vertical = args.vertical
   endif
 
-  let size = determined#command#calcSize(args)
+  if has_key(args, 'size') || has_key(args, 'rows') || has_key(args, 'cols')
+    let size = determined#command#calcSize(args)
 
-  " Set the default height or width based on whether the terminal
-  " will be vertical or horizontal
-  if args.vertical
-    let opts.term_cols = size
-  else
-    let opts.term_rows = size
-  endif
+    " Set the default height or width based on whether the terminal
+    " will be vertical or horizontal
+    if args.vertical
+      let opts.term_cols = size
+    else
+      let opts.term_rows = size
+    endif
+  end
 
   let cmd = empty(moreCmd) ? cmd : join([cmd, moreCmd], ' ')
-  let opts = has_key(args, 'term_args') ? extend(opts, args.term_args) : opts
+  let opts = extend(opts, args.term_args)
 
   if cmd =~ '%' && args.expand
     let cmd = substitute(cmd, '%', expand('%'), 'g')
