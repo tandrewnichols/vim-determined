@@ -97,7 +97,7 @@ Type: string
 
 The name of the vim command to create. This argument will be capitalized if it is not already because vim requires that custom commands be capitalized.
 
-#### Partial command
+#### Cmd
 
 Type: string
 
