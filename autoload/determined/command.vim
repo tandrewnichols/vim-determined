@@ -4,7 +4,7 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
   let moreCmd = len(a:0) ? a:1 : ''
   let opts = {}
 
-  let defaults = { 'background': 1, 'vertical': 1, 'autoclose': 1, 'size': '50%' }
+  let defaults = { 'background': 1, 'vertical': 1, 'autoclose': 1, 'size': '50%', 'reuse': 0 }
   let args = extend(args, defaults, 'keep')
 
   if args.autoclose
@@ -17,7 +17,7 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
   endif
 
   if args.vertical
-  let opts.vertical = args.vertical
+    let opts.vertical = args.vertical
   endif
 
   let size = determined#command#calcSize(args)
@@ -35,6 +35,14 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
 
   if cmd =~ '%' && args.expand
     let cmd = substitute(cmd, '%', expand('%'), 'g')
+  endif
+
+  let reuse = 0
+  if args.reuse
+    let reuse = determined#command#findBufByCmd(cmd)
+    if reuse
+      let opts = determined#command#reuse(reuse, opts)
+    endif
   endif
 
   " Execute the command, merging the options
@@ -74,4 +82,31 @@ function! determined#command#calcSize(args) abort
   endif
 
   return type(size) == type('') ? size : string(size)
+endfunction
+
+function! determined#command#findBufByCmd(cmd) abort
+  let cmd = a:cmd
+  for bufnum in range(1, bufnr('$'))
+    let name = bufname(bufnum)
+    if name =~ '!' . cmd
+      return bufnum
+    endif
+  endfor
+  return 0
+endfunction
+
+function! determined#command#reuse(bufnum, opts) abort
+  let bufnum = a:bufnum
+  let opts = a:opts
+
+  exec bufwinnr(bufnum) . "wincmd w"
+  let opts.curwin = 1
+  if has_key(opts, 'term_cols')
+    unlet opts.term_cols
+  endif
+  if has_key(opts, 'term_rows')
+    unlet opts.term_rows
+  endif
+
+  return opts
 endfunction
