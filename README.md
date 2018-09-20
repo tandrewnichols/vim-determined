@@ -91,15 +91,13 @@ Creates a command that wraps some command line tool in a call to `term_start`. I
 call determined#command(name, cmd, args)
 ```
 
-#### Arguments
-
-##### Name
+#### Name
 
 Type: string
 
-The name of the vim command to create. This argument will be capitalized if it is not already because vim requires custom commands be capitalized.
+The name of the vim command to create. This argument will be capitalized if it is not already because vim requires that custom commands be capitalized.
 
-##### Partial command
+#### Partial command
 
 Type: string
 
@@ -111,7 +109,7 @@ call determined#command('TermGrep', 'grep -r')
 
 doesn't seem unreasonable.
 
-##### Args
+#### Args
 
 Type: dict
 
