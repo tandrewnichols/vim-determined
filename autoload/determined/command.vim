@@ -16,7 +16,9 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
     let args.vertical = !args.vertical
   endif
 
+  if args.vertical
   let opts.vertical = args.vertical
+  endif
 
   let size = determined#command#calcSize(args)
 
@@ -60,10 +62,10 @@ function! determined#command#calcSize(args) abort
   endif
 
   if size =~ '%'
-    let size = substitute(size, '%', '', 'g') / 100
+    let size = substitute(size, '%', '', 'g') / 100.0
 
     " Default height/width is half current window
-    let windowSize = args.vertical ? (winwidth(0) / 2) : (winheight(0) / 2)
+    let windowSize = args.vertical ? winwidth(0) : winheight(0)
     let size = float2nr(windowSize * size)
   endif
 
