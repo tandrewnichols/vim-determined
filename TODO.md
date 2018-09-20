@@ -1,0 +1,3 @@
+- Add delay close
+- Better expand functionality (e.g. %:p or %:h etc.)
+- Add -range to operate on text
