@@ -88,7 +88,7 @@ At the moment, vim-determined has only one function that you need to care about:
 Creates a command that wraps some command line tool in a call to `term_start`. Invoke as follows:
 
 ```vim
-determined#command(name, cmd, args)
+call determined#command(name, cmd, args)
 ```
 
 #### Arguments
