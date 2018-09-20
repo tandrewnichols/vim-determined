@@ -33,6 +33,10 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
   let cmd = empty(moreCmd) ? cmd : join([cmd, moreCmd], ' ')
   let opts = has_key(args, 'term_args') ? extend(opts, args.term_args) : opts
 
+  if cmd =~ '%' && args.expand
+    let cmd = substitute(cmd, '%', expand('%'), 'g')
+  endif
+
   " Execute the command, merging the options
   call term_start(cmd, opts)
 
