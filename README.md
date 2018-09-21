@@ -4,7 +4,7 @@ A wrapper around vim 8's new term_start to make it friendlier and easier to use.
 
 ## Overview
 
-Vim 8 added asynchronous terminal support via `term_start`, and it's _really neat_. Except it's a _pain_ to use. I basically have to do `:h term_start` every time I think I might want to use it. But it seems like it wasn't really intended to be used directly, since there's no command for it. You have to invoke it with `:call term_start`. I could've made a simple command like `:Term cmd { args }` but that's annoying to type every time, so instead, this plugin exposes the `determined#command` function, which should call in your vim config setup (e.g. in vimrc). This function will create commands for you that wrap specific invocations of `:call term_start` to make it easy to use. For example, here are the current commands I'm creating in my setup via `determined#command`:
+Vim 8 added asynchronous terminal support via `term_start`, and it's _really neat_. Except it's a _pain_ to use. I basically have to do `:h term_start` every time I think I might want to use it. But it seems like it wasn't really intended to be used directly, since there's no command for it. You have to invoke it with `:call term_start`. I could've made a simple command like `:Term cmd { args }` but that's annoying to type every time, so instead, this plugin exposes the `determined#command` function, which you should call in your vim config setup (e.g. in vimrc). This function will create commands for you that wrap specific invocations of `:call term_start` to make it easy to use. For example, here are the current commands I'm creating in my setup via `determined#command`:
 
 ```vim
 " Example:
@@ -113,7 +113,7 @@ doesn't seem unreasonable.
 
 Type: dict
 
-The following args/options are supported:
+The following options are supported:
 
 - `vertical`: Whether the terminal window should split vertically or not. Default `1`. Regardless of the value passed here, you can invert this behavior by calling the created command with `!`. So in the `TermGrep` example above, by default, `:TermGrep foo` would open in a vertical split, but `:TermGrep! foo` would open in a horizontal one.
 - `background`: Whether focus should be returned to your current window. Default `1`. The nice thing about `term_grep` is that it is async, so it doesn't interrupt what you're doing in vim. The not so nice thing is that it focuses you on the new terminal window instead of keeping you where you're already working. This flag just runs `wincmd p` at the end to return you to where you were previously working.
