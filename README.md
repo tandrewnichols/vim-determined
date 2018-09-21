@@ -41,7 +41,7 @@ If you don't have a preferred installation method, I really like vim-plug and re
 
 #### Manual
 
-Clone this repository and copy the files in plugin/, autoload/, and doc/ to their respective directories in your vimfiles, or copy the text from the github repository into new files in those directories. Make sure to run `:helptag`.
+Clone this repository and copy the files in plugin/, autoload/, and doc/ to their respective directories in your vimfiles, or copy the text from the github repository into new files in those directories. Make sure to run `:helptags`.
 
 #### Plug (https://github.com/junegunn/vim-plug)
 
