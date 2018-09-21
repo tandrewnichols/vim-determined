@@ -59,7 +59,7 @@ endfunction
 function! determined#command#calcSize(args) abort
   let args = a:args
   
-  let size = args.size
+  let size = has_key(args, 'size') ? args.size : ''
 
   if has_key(args, 'rows') && !args.vertical
     let size = args.rows
