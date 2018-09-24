@@ -1,0 +1,249 @@
+*determined.txt* A wrapper to make term_start more friendly
+
+INTRODUCTION                                     *determined*
+
+A wrapper around vim 8's new term_start to make it friendlier and easier to
+use.
+
+CONTENTS                                         *determined-contents*
+
+  1. Overview                                    |determined-overview|
+  2. Requirements                                |determined-requirements|
+  3. Installation                                |determined-installation|
+  4. Usage                                       |determined-usage|
+  5. Functions                                   |determined-functions|
+  6. Commands                                    |determined-commands|
+  7. Issues                                      |determined-issues|
+  8. Contributing                                |determined-contributing|
+  9. License                                     |determined-license|
+
+OVERVIEW                                         *determined-overview*
+
+Vim 8 added asynchronous terminal support via `term_start`, and it's _really
+neat_. Except it's a _pain_ to use. I basically have to do `:h term_start`
+every time I think I might want to use it. But it seems like it wasn't really
+intended to be used directly, since there's no command for it. You have to
+invoke it with `:call term_start`. I could've made a simple command like
+`:Term cmd { args }` but that's annoying to type every time, so instead, this
+plugin exposes the `determined#command` function, which you should call in
+your vim config setup (e.g. in vimrc). This function will create commands for
+you that wrap specific invocations of `:call term_start` to make it easy to
+use. For example, here are the current commands I'm creating in my setup via
+`determined#command`: >
+
+  " Example:
+  " :Npm install some-module
+  call determined#command('Npm', 'npm', {
+    \   'vertical': 0,
+    \   'rows': '5',
+    \   'cols': '40%'
+    \ })
+
+  " Example:
+  " :Repl
+  " start an interactive node repl
+  call determined#command('Repl', 'node', {
+    \   'autoclose': 0,
+    \   'background': 0
+    \ })
+
+  " Example:
+  " :Node -e "[1, 2, 3].map((i) => i * i)"
+  call determined#command('Node', 'node', {
+    \   'vertical': 0,
+    \   'rows': '10',
+    \   'cols': '40%'
+    \ })
+
+  " Example:
+  " :Rg blah ./test
+  call determined#command('Rg', 'rg', {
+    \   'background': 0,
+    \   'autoclose': 0
+    \ })
+
+  " Example:
+  " :Grunt spec:unit
+  call determined#command('Grunt', 'grunt', {
+    \   'autoclose': 0,
+    \   'reuse': 1
+    \ })
+<
+
+REQUIREMENTS                                     *determined-requirements*
+
+This plugin requires vim at or above version 8 compiled with `+terminal`
+(check `:echo has('terminal')`).
+
+INSTALLATION                                     *determined-installation*
+
+  1. Manual
+
+     Clone this repository and copy the files in plugin/, autoload/, and doc/
+     to their respective directories in your vimfiles, or copy the text from
+     the github repository into new files in those directories. Make sure to
+     run `:helptags`.
+
+  2. Plug <https://github.com/junegunn/vim-plug>
+
+     Add the following to your vimrc, or something sourced therein: >
+
+     Plug 'tandrewnichols/vim-determined'
+<
+     Then install via `:PlugInstall`
+
+  3. Vundle <https://github.com/gmarik/Vundle.vim>
+
+     Add the following to your vimrc, or something sourced therein: >
+
+     Plugin 'tandrewnichols/vim-determined'
+<
+     Then install via `:BundleInstall`
+
+  4. NeoBundle <https://github.com/Shougo/neobundle.vim>
+
+     Add the following to your vimrc, or something sourced therein: >
+
+     NeoBundle 'tandrewnichols/vim-determined'
+<
+     Then install via `:BundleInstall`
+
+  5. Pathogen <https://github.com/tpope/vim-pathogen> >
+
+     cd ~/.vim/bundle
+     git clone https://github.com/tandrewnichols/vim-determined.git
+<
+     Then run `:Helptags`
+
+USAGE                                            *determined-usage*
+
+At the moment, vim-determined has only one function that you need to care
+about: |determined#command|.
+
+FUNCTIONS                                        *determined-functions*
+
+                                                 *determined#command()*
+determined#command(<name>, <cmd>, [args])
+
+Creates a command that wraps some command line tool in a call to `term_start`.
+
+  `name` (string) The name of the command to create. 
+  `cmd` (string)  A partial terminal command to execute when the created vim
+                command is invoked.
+  `args` (dict)   Options for configuring the vim command. The following
+                options are supported.
+
+`vertical`                                         *determined#command-vertical*
+
+Whether the terminal window should split vertically or not. Default `1`.
+Regardless of the value passed here, you can invert this behavior by calling
+the created command with `!`. So in the `TermGrep` example above, by default,
+`:TermGrep foo` would open in a vertical split, but `:TermGrep! foo` would
+open in a horizontal one.
+
+`background`                                       *determined#command-background*
+
+Whether focus should be returned to your current window. Default `1`. The nice
+thing about `term_grep` is that it is async, so it doesn't interrupt what
+you're doing in vim. The not so nice thing is that it focuses you on the new
+terminal window instead of keeping you where you're already working. This flag
+just runs `wincmd p` at the end to return you to where you were previously
+working.
+
+`autoclose`                                        *determined#command-autoclose*
+
+This param sets `'term_finish': 'close'` in the options passed to
+`term_start`. Default `0`. This is useful if you need to install something or
+run some other kind of build command of which you don't need to see the final
+output.
+
+`reuse`                                            *determined#command-reuse*
+
+If the same command has been run previously, reuse the existing window instead
+of creating a new one. Default `0`. Useful for running tests or other
+recurring commands.
+
+`expand`                                           *determined#command-expand*
+
+Treat `%` specially and replace it with the current file name. Default `0`.
+Eventually, this will hopefully do _more_ expansion. For instance `grep -r foo
+%:h` to grep in the file's directory would be nice.
+
+`size`                                             *determined#command-size*
+
+The size of the terminal window. By default, `term_start` will use half the
+vertical or horizontal space, and `vim-determined` keeps this default. You can
+pass a number (or string number) to specify the number of rows or columns,
+depending on the vertical flag (i.e. this becomes `term_rows` or `term_cols`).
+But you can also pass a percentage as a string (e.g. '40%') and
+`vim-determined` will figure out the number of rows or columns to use. You can
+also pass the special flags `small` (or `sm` or `quarter`) to make it 25%,
+`medium` (or `med` or `half`) to make it 50% (but instead you should probably
+just let it use the default), or `large` (or `lg`) to make it 75%.
+
+`rows`                                             *determined#command-rows*
+`cols`                                             *determined#command-cols*
+
+The `size` parameter is not very granular, since you might want different
+sizes based on the window orientation. In that case, you can pass the same
+kinds of identifiers for `rows` and/or `cols` as you can for `size`.
+
+`term_args`                                        *determined#command-term_args*
+
+Finally, a catch all. This should be a dict, and anything you pass here will
+be added to the `term_start` options via `extend()`. Have a look at `:h
+term_start` for the various options supported.
+
+COMMANDS                                         *determined-commands*
+
+Once you've called |determined#command()| and the vim comment has been
+created, you can call it with additional string parameters to pass to
+`term_start`. For example, if you created a command like this: >
+
+  call determined#command('Npm', 'npm')
+<
+You can invoke it in any of the following ways: >
+
+  :Npm install foo
+  :Npm uninstall foo
+  :Npm test
+  :Npm run custom-script
+  :Npm ls
+  :Npm install -D grunt grunt-contrib-copy grunt-contrib-concat
+
+ISSUES                                           *determined-issues*
+
+If you experience issues using vim-determined, please report them at
+<https://github.com/tandrewnichols/vim-determined/issues>.
+
+CONTRIBUTING                                     *determined-contributing*
+
+I always try to be open to suggestions, but I do still have opinions about what
+this should and should not be so . . . it never hurts to ask before investing a
+lot of time on a patch.
+
+LICENSE                                          *determined-license*
+
+The MIT License (MIT)
+
+Copyright (c) 2018 Andrew Nichols
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+vim:tw=78:ts=2:ft=help:norl:
