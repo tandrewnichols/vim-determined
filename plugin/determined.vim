@@ -1,4 +1,4 @@
-if exists("g:loaded_determined") || &cp | finish | endif
+if exists('g:loaded_determined') || &cp | finish | endif
 
 let g:loaded_determined = 1
 

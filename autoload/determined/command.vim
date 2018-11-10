@@ -35,7 +35,7 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
   let cmd = empty(moreCmd) ? cmd : join([cmd, moreCmd], ' ')
   let opts = extend(opts, args.term_args)
 
-  if cmd =~ '%' && args.expand
+  if cmd =~? '%' && args.expand
     let cmd = substitute(cmd, '%', expand('%'), 'g')
   endif
 
@@ -67,15 +67,15 @@ function! determined#command#calcSize(args) abort
     let size = args.cols
   endif
 
-  if size == 'small' || size == 'sm' || size == 'quarter'
+  if size ==? 'small' || size ==? 'sm' || size ==? 'quarter'
     let size = '25%'
-  elseif size == 'medium' || size == 'md' || size == 'half'
+  elseif size ==? 'medium' || size ==? 'md' || size ==? 'half'
     let size = '50%'
-  elseif size == 'large' || size == 'lg'
+  elseif size ==? 'large' || size ==? 'lg'
     let size = '75%'
   endif
 
-  if size =~ '%'
+  if size =~? '%'
     let size = substitute(size, '%', '', 'g') / 100.0
 
     " Default height/width is half current window
@@ -90,7 +90,7 @@ function! determined#command#findBufByCmd(cmd) abort
   let cmd = a:cmd
   for bufnum in range(1, bufnr('$'))
     let name = bufname(bufnum)
-    if name =~ '!' . cmd
+    if name =~? '!' . cmd
       return bufnum
     endif
   endfor
@@ -101,7 +101,7 @@ function! determined#command#reuse(bufnum, opts) abort
   let bufnum = a:bufnum
   let opts = a:opts
 
-  exec bufwinnr(bufnum) . "wincmd w"
+  exec bufwinnr(bufnum) . 'wincmd w'
   let opts.curwin = 1
   if has_key(opts, 'term_cols')
     unlet opts.term_cols

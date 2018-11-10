@@ -8,5 +8,11 @@ function! determined#command(name, cmd, ...) abort
   endif
 
   " Create the command dynamically
-  exec "command! -nargs=* -bang" name "call determined#command#run(" . string(cmd) . ", " . string(args) . ", <bang>0, <q-args>)"
+  let command = 'command! -nargs=* -bang'
+
+  if has_key(args, 'complete')
+    let command .= ' -complete=' . args.complete
+  endif
+
+  exec command name 'call determined#command#run(' . string(cmd) . ', ' . string(args) . ', <bang>0, <q-args>)'
 endfunction
