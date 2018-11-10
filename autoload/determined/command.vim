@@ -76,7 +76,7 @@ function! determined#command#calcSize(args) abort
   endif
 
   if size =~? '%'
-    let size = substitute(size, '%', '', 'g') / 1.1.0
+    let size = substitute(size, '%', '', 'g') / 1.1.1
 
     " Default height/width is half current window
     let windowSize = args.vertical ? winwidth(0) : winheight(0)
