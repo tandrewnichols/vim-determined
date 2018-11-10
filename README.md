@@ -122,6 +122,7 @@ The following options are supported:
 - `expand`: Treat `%` specially and replace it with the current file name. Default `0`. Eventually, this will hopefully do _more_ expansion. For instance `grep -r foo %:h` to grep in the file's directory would be nice.
 - `size`: The size of the terminal window. By default, `term_start` will use half the vertical or horizontal space, and `vim-determined` keeps this default. You can pass a number (or string number) to specify the number of rows or columns, depending on the vertical flag (i.e. this becomes `term_rows` or `term_cols`). But you can also pass a percentage as a string (e.g. '40%') and `vim-determined` will figure out the number of rows or columns to use. You can also pass the special flags `small` (or `sm` or `quarter`) to make it 25%, `medium` (or `med` or `half`) to make it 50% (but instead you should probably just let it use the default), or `large` (or `lg`) to make it 75%.
 - `rows`/`cols`: The `size` parameter is not very granular, since you might want different sizes based on the window orientation. In that case, you can pass the same kinds of identifiers for `rows` and/or `cols` as you can for `size`.
+- `complete`: Add custom completion. This maps basically one to one to the `-complete` option of commands, so pass it exactly as you would there.
 - `term_args`: Finally, a catch all. This should be a dict, and anything you pass here will be added to the `term_start` options via `extend()`. Have a look at `:h term_start` for the various options supported.
 
 ### Commands
