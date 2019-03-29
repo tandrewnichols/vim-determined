@@ -129,17 +129,18 @@ function! determined#command#calcSize(args) abort
     let size = float2nr(windowSize * size)
   endif
 
-  return type(size) == type('') ? size : string(size)
+  return type(size) == v:t_string ? size : string(size)
 endfunction
 
 function! determined#command#findBufByCmd(cmd) abort
   let cmd = a:cmd
-  for bufnum in range(1, bufnr('$'))
+  for bufnum in term_list()
     let name = bufname(bufnum)
     if name =~? '!' . cmd
       return bufnum
     endif
   endfor
+
   return 0
 endfunction
 
