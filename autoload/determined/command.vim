@@ -122,8 +122,35 @@ endfunction
 function! determined#command#reuse(bufnum, opts) abort
   let bufnum = a:bufnum
   let opts = a:opts
+  let num = bufwinnr(bufnum)
+  let name = bufname(bufnum)
 
-  exec bufwinnr(bufnum) . 'wincmd w'
+  if bufexists(name) && getbufinfo(name)[0].hidden
+    if opts.tabnew
+      let prefix = 'tab b'
+    elseif opts.curwin
+      let prefix = 'b'
+    elseif opts.vertical
+      let prefix = 'vert sb'
+    else
+      let prefix = 'sb'
+    endif
+
+    exec prefix bufnum
+  else
+    if num == -1
+      for i in range(1, tabpagenr('$'))
+        if index(tabpagebuflist(string(i)), bufnum) > -1
+          exec 'normal!' i . 'gt'
+          let num = bufwinnr(bufnum)
+          break
+        endif
+      endfor
+    endif
+
+    exec num . 'wincmd w'
+  endif
+
   let opts.curwin = 1
   if has_key(opts, 'term_cols')
     unlet opts.term_cols
