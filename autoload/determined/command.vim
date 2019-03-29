@@ -161,3 +161,20 @@ function! determined#command#reuse(bufnum, opts) abort
 
   return opts
 endfunction
+
+function! determined#command#close(force) abort
+  let terms = term_list()
+  for term in terms
+    let stopped = 0
+    let job = term_getjob(term)
+    let status = job_status(job)
+    if status == 'run' && a:force
+      let stopped = 1
+      call job_stop(job)
+    endif
+
+    if status != 'run' || stopped
+      exec 'bw' term
+    endif
+  endfor
+endfunction
