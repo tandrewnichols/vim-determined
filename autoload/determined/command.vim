@@ -62,8 +62,8 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   endif
 
   let reuse = 0
-  if args.reuse
-    let reuse = determined#command#findBufByCmd(cmd)
+  if args.reuse || args.singleton
+    let reuse = determined#command#findBufByCmd(args.singleton ? a:cmd : cmd)
     if reuse
       let opts = determined#command#reuse(reuse, opts)
     endif
