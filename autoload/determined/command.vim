@@ -89,6 +89,13 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   " Execute the command, merging the options
   exec a:mods ' call term_start(' . shellescape(cmd, 1) . ', ' . string(opts) . ')'
 
+  let b:term_args = [a:cmd, a:args, a:changeVert, a:mods]
+  if a:0 > 0
+    let b:term_args += a:000
+  endif
+
+  nnoremap <buffer> <C-R> :call call('determined#command#run', b:term_args)<CR>
+
   "And return to the previous window
   if args.background
     wincmd p
