@@ -1,4 +1,4 @@
-function! determined#command#run(cmd, args, changeVert, ...) abort
+function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   let cmd = a:cmd
   let args = a:args
   let moreCmd = len(a:0) ? a:1 : ''
@@ -48,7 +48,7 @@ function! determined#command#run(cmd, args, changeVert, ...) abort
   endif
 
   " Execute the command, merging the options
-  call term_start(cmd, opts)
+  exec a:mods ' call term_start(' . shellescape(cmd, 1) . ', ' . string(opts) . ')'
 
   "And return to the previous window
   if args.background

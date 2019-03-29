@@ -14,5 +14,5 @@ function! determined#command(name, cmd, ...) abort
     let command .= ' -complete=' . args.complete
   endif
 
-  exec command name 'call determined#command#run(' . string(cmd) . ', ' . string(args) . ', <bang>0, <q-args>)'
+  exec command name 'call determined#command#run(' . string(cmd) . ', ' . string(args) . ', <bang>0, <q-mods>, <q-args>)'
 endfunction
