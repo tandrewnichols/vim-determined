@@ -58,7 +58,7 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   let opts = extend(opts, args.term_args)
 
   if cmd =~? '%' && args.expand
-    let cmd = substitute(cmd, '%', expand('%'), 'g')
+    let cmd = substitute(cmd, '\(\(%\|#\d*\|<\w\+>\)\(:\w\)*\)', '\=expand(submatch(0))', 'g')
   endif
 
   let reuse = 0
