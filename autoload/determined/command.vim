@@ -69,6 +69,23 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
     endif
   endif
 
+  " Auto size based on height/width ratios
+  if has_key(args, 'size') && args.size ==? 'auto' && !has_key(opts, 'curwin')
+    if has_key(opts, 'term_cols')
+      unlet opts.term_cols
+    endif
+    if has_key(opts, 'term_rows')
+      unlet opts.term_rows
+    endif
+    let widthRatio = winwidth(0) / str2float(&columns)
+    let heightRatio = winheight(0) / str2float(&lines)
+    if widthRatio > heightRatio
+      let opts.vertical = 1
+    else
+      let opts.vertical = 0
+    endif
+  endif
+
   " Execute the command, merging the options
   exec a:mods ' call term_start(' . shellescape(cmd, 1) . ', ' . string(opts) . ')'
 
