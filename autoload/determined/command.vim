@@ -4,7 +4,17 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   let moreCmd = len(a:0) ? a:1 : ''
   let opts = {}
 
-  let defaults = { 'background': 1, 'vertical': 1, 'autoclose': 0, 'reuse': 0, 'expand': 0, 'term_args': {} }
+  let defaults = {
+    \   'background': 1,
+    \   'vertical': 1,
+    \   'autoclose': 0,
+    \   'reuse': 0,
+    \   'singleton': 0,
+    \   'expand': 0,
+    \   'tabnew': 0,
+    \   'curwin': 0,
+    \   'term_args': {}
+    \ }
   let args = extend(args, defaults, 'keep')
 
   if args.autoclose
@@ -18,6 +28,18 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
 
   if args.vertical
     let opts.vertical = args.vertical
+  endif
+
+  if args.tabnew || args.curwin
+    if has_key(opts, 'vertical')
+      unlet opts.vertical
+    endif
+
+    let opts.curwin = 1
+
+    if args.tabnew
+      tabnew
+    endif
   endif
 
   if has_key(args, 'size') || has_key(args, 'rows') || has_key(args, 'cols')
