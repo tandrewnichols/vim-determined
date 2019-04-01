@@ -12,6 +12,7 @@ function! determined#command(name, cmd, ...) abort
 
   if has_key(args, 'complete')
     let command .= ' -complete=' . args.complete
+    unlet args.complete
   endif
 
   exec command name 'call determined#command#run(' . string(cmd) . ', ' . string(args) . ', <bang>0, <q-mods>, <q-args>)'
