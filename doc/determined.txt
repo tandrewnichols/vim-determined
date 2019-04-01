@@ -2,24 +2,25 @@
 
 INTRODUCTION                                     *determined*
 
-A wrapper around vim 8's new term_start to make it friendlier and easier to
+A wrapper around vim 8's new |term_start| to make it friendlier and easier to
 use.
 
 CONTENTS                                         *determined-contents*
 
-  1. Overview                                    |determined-overview|
-  2. Requirements                                |determined-requirements|
-  3. Installation                                |determined-installation|
-  4. Usage                                       |determined-usage|
-  5. Functions                                   |determined-functions|
-  6. Commands                                    |determined-commands|
-  7. Issues                                      |determined-issues|
-  8. Contributing                                |determined-contributing|
-  9. License                                     |determined-license|
+  1.  Overview                                    |determined-overview|
+  2.  Requirements                                |determined-requirements|
+  3.  Installation                                |determined-installation|
+  4.  Usage                                       |determined-usage|
+  5.  Functions                                   |determined-functions|
+  6.  Commands                                    |determined-commands|
+  7.  Mappings                                    |determined-mappings|
+  8.  Issues                                      |determined-issues|
+  9.  Contributing                                |determined-contributing|
+  10. License                                     |determined-license|
 
 OVERVIEW                                         *determined-overview*
 
-Vim 8 added asynchronous terminal support via `term_start`, and it's _really
+Vim 8 added asynchronous terminal support via |term_start|, and it's _really
 neat_. Except it's a _pain_ to use. I basically have to do `:h term_start`
 every time I think I might want to use it. But it seems like it wasn't really
 intended to be used directly, since there's no command for it. You have to
@@ -28,7 +29,7 @@ invoke it with `:call term_start`. I could've made a simple command like
 plugin exposes the `determined#command` function, which you should call in
 your vim config setup (e.g. in vimrc). This function will create commands for
 you that wrap specific invocations of `:call term_start` to make it easy to
-use. For example, here are the current commands I'm creating in my setup via
+use. For example, here are some commands I'm creating in my setup via
 `determined#command`: >
 
   " Example:
@@ -117,15 +118,17 @@ INSTALLATION                                     *determined-installation*
 
 USAGE                                            *determined-usage*
 
-At the moment, vim-determined has only one function that you need to care
-about: |determined#command|.
+To create |term_start| wrappers at vim startup, use the |determined#command()|
+function. There is also a `:Term` (see |determined-:Term|) command for ad hoc
+terminal commands, and a `:TermClose` (see |deteremined-:TermClose|) command
+for closing previous terminal commands.
 
 FUNCTIONS                                        *determined-functions*
 
                                                  *determined#command()*
 determined#command(<name>, <cmd>, [args])
 
-Creates a command that wraps some command line tool in a call to `term_start`.
+Creates a command that wraps some command line tool in a call to |term_start|.
 
   `name` (string) The name of the command to create. 
   `cmd` (string)  A partial terminal command to execute when the created vim
@@ -153,7 +156,7 @@ working.
 `autoclose`                                        *determined#command-autoclose*
 
 This param sets `'term_finish': 'close'` in the options passed to
-`term_start`. Default `0`. This is useful if you need to install something or
+|term_start|. Default `0`. This is useful if you need to install something or
 run some other kind of build command of which you don't need to see the final
 output.
 
@@ -163,36 +166,62 @@ If the same command has been run previously, reuse the existing window instead
 of creating a new one. Default `0`. Useful for running tests or other
 recurring commands.
 
+`singleton`                                        *determined#command-singleton*
+
+Like `reuse` but ignores additional arguments. If you want all `grep`'s to
+happen in the same terminal window regardless of the query, use this option.
+
 `expand`                                           *determined#command-expand*
 
-Treat `%` specially and replace it with the current file name. Default `0`.
-Eventually, this will hopefully do _more_ expansion. For instance `grep -r foo
-%:h` to grep in the file's directory would be nice.
+Treat `%` (and `#`, `<cfile>`, etc.) specially and call |expand()| on it. Default `0`.
+|filename-modifiers| work here as well, so something like
+`:TermGrep foo %:h:h` would work as expected.
 
 `size`                                             *determined#command-size*
 
-The size of the terminal window. By default, `term_start` will use half the
+The size of the terminal window. By default, |term_start| will use half the
 vertical or horizontal space, and `vim-determined` keeps this default. You can
 pass a number (or string number) to specify the number of rows or columns,
 depending on the vertical flag (i.e. this becomes `term_rows` or `term_cols`).
 But you can also pass a percentage as a string (e.g. '40%') and
 `vim-determined` will figure out the number of rows or columns to use. You can
-also pass the special flags `small` (or `sm` or `quarter`) to make it 25%,
-`medium` (or `med` or `half`) to make it 50% (but instead you should probably
-just let it use the default), or `large` (or `lg`) to make it 75%.
+also pass the special flags `'small'` (or `'sm'` or `'quarter'`) to make it 25%,
+`'medium'` (or `'med'` or `'half'`) to make it 50% (but instead you should probably
+just let it use the default), or `'large'` (or `'lg'`) to make it 75%. Finally,
+there is a special value `'auto'` which will look at the window height and width
+ratios to determine for you whether a vertical or horizontal split would be
+more efficient. Passing `'auto'` is incompatible with passing `rows` and `cols`
+(see below). It will also cause `!` to be ignored. The one exception to this
+parameter is that if `curwin` is set, this option is ignored, as it will use
+the space of the current window regardless.
 
 `rows`                                             *determined#command-rows*
 `cols`                                             *determined#command-cols*
 
 The `size` parameter is not very granular, since you might want different
 sizes based on the window orientation. In that case, you can pass the same
-kinds of identifiers for `rows` and/or `cols` as you can for `size`.
+kinds of identifiers for `rows` and/or `cols` as you can for `size` (except for
+`'auto'` which would not make sense).
+
+`complete`                                         *determined#command-complete*
+
+Add custom completion. This maps basically one to one to the `-complete`
+option for commands (see |:command-complete|), so pass it exactly as you would
+there.
+
+`tabnew`                                           *determined#command-tabnew*
+
+Always run `cmd` in a new tab. Default `0`.
+
+`curwin`                                           *determined#command-curwin*
+
+Always run `cmd` in the current window. Default `0`.
 
 `term_args`                                        *determined#command-term_args*
 
 Finally, a catch all. This should be a dict, and anything you pass here will
-be added to the `term_start` options via `extend()`. Have a look at `:h
-term_start` for the various options supported.
+be added to the `term_start` options via `extend()`. See |term_start| for the
+various options supported.
 
 COMMANDS                                         *determined-commands*
 
@@ -210,6 +239,52 @@ You can invoke it in any of the following ways: >
   :Npm run custom-script
   :Npm ls
   :Npm install -D grunt grunt-contrib-copy grunt-contrib-concat
+
+|determined#command()| will also create `E` and `T` versions for opening the
+command in a new tab or in the current window (even though you can configure
+this per command via the args above. In the above example, the following
+commands are also created: >
+
+  :ENpm - Run the npm command in the current window
+  :TNpm - Run the npm command in a new tabpage
+<
+
+In additional, `vim-determined` includes the following built-in commands:
+
+`:TermClose[!]`                                    *determined-:TermClose*
+
+Close all open term windows where the job is not currently running. When
+<bang> is included, stop running jobs and close those terms too.
+
+`:Term[!]`                                         *determined-:Term*
+
+A generic wrapper for |term_start| for commands that you haven't created via
+|determined#command()|. For instance, `:Term find . -name somefile.ext` will
+run `find . -name somefile.ext` in a (by default) horizontal split. Use <bang>
+to open the command in a vertical split.
+
+`:ETerm`                                           *determined-:ETerm*
+
+Like `:Term`, but in the current window.
+
+`:TTerm`                                           *determined-:TTerm*
+
+Like `:Term`, but in a new tabpage.
+
+`:VTerm`                                           *determined-:VTerm*
+
+Synonymous with `:Term!`, but included for completeness.
+
+`:STerm`                                           *determined-:STerm*
+
+Synonymous with `:Term`, but included for completeness.
+
+MAPPINGS                                         *determined-mappings*
+
+<C-r>                                            *determined-<C-r>*
+
+Within a terminal window created by `vim-determined` (but currently not if the
+job is still running), this will rerun the original command (e.g. "redo").
 
 ISSUES                                           *determined-issues*
 
