@@ -7,15 +7,16 @@ use.
 
 CONTENTS                                         *determined-contents*
 
-  1. Overview                                    |determined-overview|
-  2. Requirements                                |determined-requirements|
-  3. Installation                                |determined-installation|
-  4. Usage                                       |determined-usage|
-  5. Functions                                   |determined-functions|
-  6. Commands                                    |determined-commands|
-  7. Issues                                      |determined-issues|
-  8. Contributing                                |determined-contributing|
-  9. License                                     |determined-license|
+  1.  Overview                                    |determined-overview|
+  2.  Requirements                                |determined-requirements|
+  3.  Installation                                |determined-installation|
+  4.  Usage                                       |determined-usage|
+  5.  Functions                                   |determined-functions|
+  6.  Commands                                    |determined-commands|
+  7.  Mappings                                    |determined-mappings|
+  8.  Issues                                      |determined-issues|
+  9.  Contributing                                |determined-contributing|
+  10. License                                     |determined-license|
 
 OVERVIEW                                         *determined-overview*
 
@@ -277,6 +278,13 @@ Synonymous with `:Term!`, but included for completeness.
 `:STerm`                                           *determined-:STerm*
 
 Synonymous with `:Term`, but included for completeness.
+
+MAPPINGS                                         *determined-mappings*
+
+<C-r>                                            *determined-<C-r>*
+
+Within a terminal window created by `vim-determined` (but currently not if the
+job is still running), this will rerun the original command (e.g. "redo").
 
 ISSUES                                           *determined-issues*
 

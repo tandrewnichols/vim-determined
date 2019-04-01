@@ -87,14 +87,14 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   endif
 
   " Execute the command, merging the options
-  exec a:mods ' call term_start(' . shellescape(cmd, 1) . ', ' . string(opts) . ')'
+  call determined#command#callTermStart(a:mods, cmd, opts)
 
-  let b:term_args = [a:cmd, a:args, a:changeVert, a:mods]
+  let b:term_args = [a:cmd]
   if a:0 > 0
     let b:term_args += a:000
   endif
 
-  nnoremap <buffer> <C-R> :call call('determined#command#run', b:term_args)<CR>
+  nnoremap <buffer> <C-R> :call determined#command#callTermStart('', join(b:term_args, ' '), { 'curwin': 1 })<CR>
 
   "And return to the previous window
   if args.background
@@ -202,4 +202,14 @@ function! determined#command#close(force) abort
       exec 'bw' term
     endif
   endfor
+endfunction
+
+function! determined#command#runGeneric(mods, args, opts) abort
+  call determined#command#callTermStart(a:mods, a:args, a:opts)
+  let b:term_args = a:args
+  nnoremap <buffer> <C-R> :call determined#command#callTermStart('', b:term_args, { 'curwin': 1 })<CR>
+endfunction
+
+function! determined#command#callTermStart(mods, args, opts) abort
+  exec a:mods 'call term_start(' . shellescape(a:args, 1) . ', ' . string(a:opts) . ')'
 endfunction

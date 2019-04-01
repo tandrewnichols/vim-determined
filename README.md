@@ -161,6 +161,10 @@ For completeness, `determined#command` also creates `E` and `T` versions for ope
 - `:VTerm` - Like `:Term`, but in a vertical split . . . so this is identical to `:Term!` but is included for completeness.
 - `:STerm` - Synonymous with `:Term` but included for completeness.
 
+### Mappings
+
+Within a terminal window opened by `vim-determined`, `<C-r>` is mapped to rerun the original command. Hopefully, the symmetry is obvious. `<C-r>` is for "redo," but terminals are not modifiable, so I'm repurposing that keybinding to have specialized meaning.
+
 ## Contributing
 
 I always try to be open to suggestions, but I do still have opinions about what this should and should not be so . . . it never hurts to ask before investing a lot of time on a patch.
