@@ -81,11 +81,11 @@ git clone https://github.com/tandrewnichols/vim-determined.git ~/.vim/bundle/vim
 
 ## Usage
 
-At the moment, vim-determined has only one function that you need to care about:
+To create `term_start` wrappers at vim startup, call the following function:
 
 ### determined#command
 
-Creates a command that wraps some command line tool in a call to `term_start`. Invoke as follows:
+This creates a command that wraps some command line tool in a call to `term_start`. Invoke as follows:
 
 ```vim
 call determined#command(name, cmd, args)
@@ -101,13 +101,11 @@ The name of the vim command to create. This argument will be capitalized if it i
 
 Type: string
 
-The static part of the command to run when the vim command is invoked. Usually this is the base binary name only, but it could be more if you run very specific things very often. For example,
+The static part of the command to run when the vim command is invoked. Usually this is the base binary name only, but it could be more if you run very specific things very often. For example:
 
 ```vim
 call determined#command('TermGrep', 'grep -r')
 ```
-
-doesn't seem unreasonable.
 
 #### Args
 
@@ -115,18 +113,22 @@ Type: dict
 
 The following options are supported:
 
-- `vertical`: Whether the terminal window should split vertically or not. Default `1`. Regardless of the value passed here, you can invert this behavior by calling the created command with `!`. So in the `TermGrep` example above, by default, `:TermGrep foo` would open in a vertical split, but `:TermGrep! foo` would open in a horizontal one.
+- `vertical`: Whether the terminal window should split vertically or not. Default `1` (because I use it this way far more often, even though the default for term_start is _not_ vertical). Regardless of the value passed here, you can invert this behavior by calling the created command with `!`. So in the `TermGrep` example above, by default, `:TermGrep foo` would open in a vertical split, but `:TermGrep! foo` would open in a horizontal one.
 - `background`: Whether focus should be returned to your current window. Default `1`. The nice thing about `term_grep` is that it is async, so it doesn't interrupt what you're doing in vim. The not so nice thing is that it focuses you on the new terminal window instead of keeping you where you're already working. This flag just runs `wincmd p` at the end to return you to where you were previously working.
 - `autoclose`: This param sets `'term_finish': 'close'` in the options passed to `term_start`. Default `0`. This is useful if you need to install something or run some other kind of build command of which you don't need to see the final output.
 - `reuse`: If the same command has been run previously, reuse the existing window instead of creating a new one. Default `0`. Useful for running tests or other recurring commands.
-- `expand`: Treat `%` specially and replace it with the current file name. Default `0`. Eventually, this will hopefully do _more_ expansion. For instance `grep -r foo %:h` to grep in the file's directory would be nice.
-- `size`: The size of the terminal window. By default, `term_start` will use half the vertical or horizontal space, and `vim-determined` keeps this default. You can pass a number (or string number) to specify the number of rows or columns, depending on the vertical flag (i.e. this becomes `term_rows` or `term_cols`). But you can also pass a percentage as a string (e.g. '40%') and `vim-determined` will figure out the number of rows or columns to use. You can also pass the special flags `small` (or `sm` or `quarter`) to make it 25%, `medium` (or `med` or `half`) to make it 50% (but instead you should probably just let it use the default), or `large` (or `lg`) to make it 75%.
-- `rows`/`cols`: The `size` parameter is not very granular, since you might want different sizes based on the window orientation. In that case, you can pass the same kinds of identifiers for `rows` and/or `cols` as you can for `size`.
+- `singleton`: Like `reuse` but for the top level command. If you created `:TermGrep` with the `singleton` flag, all greps, regardless of other parameters, will happen in the same window. Default `0`.
+- `expand`: Treat `%` (and `#`, `<cfile>`, etc.) specially and call `expand()` on it. Default `0`. `filename-modifiers` work here as well, so something like `:TermGrep foo %:h:h` would work as expected.
+- `size`: The size of the terminal window. By default, `term_start` will use half the vertical or horizontal space, and `vim-determined` keeps this default. You can pass a number (or string number) to specify the number of rows or columns, depending on the vertical flag (i.e. this becomes `term_rows` or `term_cols`). But you can also pass a percentage as a string (e.g. '40%') and `vim-determined` will figure out the number of rows or columns to use. You can also pass the special flags `'small'` (or `'sm'` or `'quarter'`) to make it 25%, `'medium'` (or `'med'` or `'half'`) to make it 50% (but instead you should probably just let it use the default), or `'large'` (or `'lg'`) to make it 75%. Finally, there is a special value `auto` which will look at the window height and width ratios to determine _for you_ whether a vertical or horizontal split would be more efficient. Passing `auto` is incompatible with passing `rows` and `cols` (see below). It will also cause `!` to be ignored. The one exception to this parameter is that if `curwin` is set, this option is ignored, as it will use the space of the current window regardless.
+- `rows`/`cols`: The `size` parameter is not very granular, since you might want different sizes based on the window orientation. In that case, you can pass the same kinds of identifiers for `rows` and/or `cols` as you can for `size` (except for `'auto'` which would not make sense).
 - `complete`: Add custom completion. This maps basically one to one to the `-complete` option of commands, so pass it exactly as you would there.
+- `tabnew`: Always run `cmd` in a new tab. Default `0`.
+- `curwin`: Always run `cmd` in the current window. Default `0`.
 - `term_args`: Finally, a catch all. This should be a dict, and anything you pass here will be added to the `term_start` options via `extend()`. Have a look at `:h term_start` for the various options supported.
 
 ### Commands
 
+#### Commands created via determined#command
 Once the command is created, you can call it with additional string parameters to pass to `term_start`. For example, if you created a command like this:
 
 ```vim
@@ -142,6 +144,22 @@ You can invoke it in any of the following ways:
 - `:Npm ls`
 - `:Npm install -D grunt grunt-contrib-copy grunt-contrib-uglify grunt-contrib-concat`
 - etc. etc.
+
+For completeness, `determined#command` also creates `E` and `T` versions for opening the command in a new tab or in the current window (even though you can configure this per command via [args](#args). So in the case above, the following commands are also created:
+
+- `:ENpm` - Run the npm command in the current window.
+- `:TNpm` - Run the npm command in a new tabpage.
+
+#### Additional commands
+
+`vim-determined` does include a few built in commands.
+
+- `:TermClose[!]` - Close all open term windows (where the job is not currently running). When `<bang>` is included, stop running jobs and close those terms too.
+- `:Term[!]` - A generic wrapper for call `term_start` with commands that you haven't created via `determined#command`. For instance, I don't use `find` very often, so I'm not creating a command for it with `determined#command`, but if I _need_ to use it in vim, I can run `:Term find . -name somefile.ext`. This uses the default arguments to `term_start`, which means it will open in a horizontal split. Use `<bang>` to open it in a vertical split.
+- `:ETerm` - Like `:Term`, but in the current window.
+- `:TTerm` - Like `:Term`, but in a new tabpage.
+- `:VTerm` - Like `:Term`, but in a vertical split . . . so this is identical to `:Term!` but is included for completeness.
+- `:STerm` - Synonymous with `:Term` but included for completeness.
 
 ## Contributing
 
