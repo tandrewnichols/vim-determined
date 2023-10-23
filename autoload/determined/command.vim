@@ -151,11 +151,11 @@ function! determined#command#reuse(bufnum, opts) abort
   let name = bufname(bufnum)
 
   if bufexists(name) && getbufinfo(name)[0].hidden
-    if opts.tabnew
+    if has_key(opts, 'tabnew') && opts.tabnew
       let prefix = 'tab b'
-    elseif opts.curwin
+    elseif has_key(opts, 'curwin') && opts.curwin
       let prefix = 'b'
-    elseif opts.vertical
+    elseif has_key(opts, 'vertical') && opts.vertical
       let prefix = 'vert sb'
     else
       let prefix = 'sb'
@@ -204,12 +204,9 @@ function! determined#command#close(force) abort
   endfor
 endfunction
 
-function! determined#command#runGeneric(mods, args, opts) abort
-  call determined#command#callTermStart(a:mods, a:args, a:opts)
-  let b:term_args = a:args
-  nnoremap <buffer> <C-R> :call determined#command#callTermStart('', b:term_args, { 'curwin': 1 })<CR>
-endfunction
-
 function! determined#command#callTermStart(mods, args, opts) abort
   exec a:mods 'call term_start(' . shellescape(a:args, 1) . ', ' . string(a:opts) . ')'
+  let b:term_args = a:args
+  nnoremap <buffer> <C-R> :call determined#command#callTermStart('', b:term_args, { 'curwin': 1 })<CR>
+  nnoremap <buffer> q :q<CR>
 endfunction
