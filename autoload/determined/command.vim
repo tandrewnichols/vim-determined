@@ -65,7 +65,7 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   if args.reuse || args.singleton
     let reuse = determined#command#findBufByCmd(args.singleton ? a:cmd : cmd)
     if reuse
-      let opts = determined#command#reuse(reuse, opts)
+      exec 'bw' reuse
     endif
   endif
 
@@ -88,13 +88,6 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
 
   " Execute the command, merging the options
   call determined#command#callTermStart(a:mods, cmd, opts)
-
-  let b:term_args = [a:cmd]
-  if a:0 > 0
-    let b:term_args += a:000
-  endif
-
-  nnoremap <buffer> <C-R> :call determined#command#callTermStart('', join(b:term_args, ' '), { 'curwin': 1 })<CR>
 
   "And return to the previous window
   if args.background
@@ -136,55 +129,12 @@ function! determined#command#findBufByCmd(cmd) abort
   let cmd = a:cmd
   for bufnum in term_list()
     let name = bufname(bufnum)
-    if name =~? '!' . cmd
+    if name == cmd
       return bufnum
     endif
   endfor
 
   return 0
-endfunction
-
-function! determined#command#reuse(bufnum, opts) abort
-  let bufnum = a:bufnum
-  let opts = a:opts
-  let num = bufwinnr(bufnum)
-  let name = bufname(bufnum)
-
-  if bufexists(name) && getbufinfo(name)[0].hidden
-    if has_key(opts, 'tabnew') && opts.tabnew
-      let prefix = 'tab b'
-    elseif has_key(opts, 'curwin') && opts.curwin
-      let prefix = 'b'
-    elseif has_key(opts, 'vertical') && opts.vertical
-      let prefix = 'vert sb'
-    else
-      let prefix = 'sb'
-    endif
-
-    exec prefix bufnum
-  else
-    if num == -1
-      for i in range(1, tabpagenr('$'))
-        if index(tabpagebuflist(string(i)), bufnum) > -1
-          exec 'normal!' i . 'gt'
-          let num = bufwinnr(bufnum)
-          break
-        endif
-      endfor
-    endif
-
-    exec num . 'wincmd w'
-  endif
-
-  let opts.curwin = 1
-  if has_key(opts, 'term_cols')
-    unlet opts.term_cols
-  endif
-  if has_key(opts, 'term_rows')
-    unlet opts.term_rows
-  endif
-
-  return opts
 endfunction
 
 function! determined#command#close(force) abort
@@ -204,9 +154,15 @@ function! determined#command#close(force) abort
   endfor
 endfunction
 
+function! s:escapeForNext(str) abort
+  return substitute(shellescape(a:str, 1), '\v([\[\]\(\)])', '\="\\\\\\\\" . submatch(1)', 'g')
+endfunction
+
 function! determined#command#callTermStart(mods, args, opts) abort
-  exec a:mods 'call term_start(' . shellescape(a:args, 1) . ', ' . string(a:opts) . ')'
+  exec a:mods 'call term_start(' . s:escapeForNext(a:args) . ', ' . string(extend(a:opts, { 'term_name': a:args })) . ')'
+  let b:term_mods = a:mods
   let b:term_args = a:args
-  nnoremap <buffer> <C-R> :call determined#command#callTermStart('', b:term_args, { 'curwin': 1 })<CR>
-  nnoremap <buffer> q :q<CR>
+  let b:term_opts = a:opts
+  nnoremap <buffer> <C-R> :call determined#command#callTermStart(b:term_mods, b:term_args, extend(b:term_opts, { 'curwin': 1 }))<CR>
+  nnoremap <buffer> q :bw<CR>
 endfunction
