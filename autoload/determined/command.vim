@@ -1,3 +1,37 @@
+" Like determined#command, but `Fn` is a funcref evaluated each time the command
+" runs and must return the command string. Use this when part of the command
+" depends on runtime context (current file, cwd, ...) that's easier to compute
+" in vimscript. The returned string may still contain `%`/`#`/`<word>` tokens —
+" they're expanded (and escaped) by command#run just like a static command, so
+" pass `expand`/`escape` in `args` as usual. Returning '' aborts silently.
+function! determined#command#create(name, Fn, ...) abort
+  let name = a:name
+  let args = a:0 ? a:1 : {}
+
+  if name !~# '^[A-Z]'
+    let name = toupper(name[0]) . name[1:]
+  endif
+
+  let command = 'command! -nargs=* -bang'
+
+  if has_key(args, 'complete')
+    let command .= ' -complete=' . args.complete
+    unlet args.complete
+  endif
+
+  exec command name 'call determined#command#runFn(' . string(a:Fn) . ', ' . string(args) . ', <bang>0, <q-mods>, <q-args>)'
+  exec command 'E' . name 'call determined#command#runFn(' . string(a:Fn) . ', ' . string(extend(copy(args), { 'curwin': 1 })) . ', <bang>0, <q-mods>, <q-args>)'
+  exec command 'T' . name 'tabnew | call determined#command#runFn(' . string(a:Fn) . ', ' . string(extend(copy(args), { 'curwin': 1 })) . ', <bang>0, <q-mods>, <q-args>)'
+endfunction
+
+function! determined#command#runFn(Fn, args, changeVert, mods, ...) abort
+  let cmd = call(a:Fn, [])
+  if empty(cmd)
+    return
+  endif
+  call determined#command#run(cmd, a:args, a:changeVert, a:mods, a:0 ? a:1 : '')
+endfunction
+
 function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   let cmd = a:cmd
   let args = a:args
@@ -58,7 +92,7 @@ function! determined#command#run(cmd, args, changeVert, mods, ...) abort
   let opts = extend(opts, args.term_args)
 
   if cmd =~? '%' && args.expand
-    let cmd = substitute(cmd, '\(\(%\|#\d*\|<\w\+>\)\(:\w\)*\)', '\=expand(submatch(0))', 'g')
+    let cmd = substitute(cmd, '\(\(%\|#\d*\|<\w\+>\)\(:\w\)*\)', '\=has_key(args, "escape") ? args.escape(expand(submatch(0))) : expand(submatch(0))', 'g')
   endif
 
   let reuse = 0
@@ -154,12 +188,9 @@ function! determined#command#close(force) abort
   endfor
 endfunction
 
-function! s:escapeForNext(str) abort
-  return substitute(shellescape(a:str, 1), '\v([\[\]\(\)])', '\="\\\\\\\\" . submatch(1)', 'g')
-endfunction
-
 function! determined#command#callTermStart(mods, args, opts) abort
-  exec a:mods 'call term_start(' . s:escapeForNext(a:args) . ', ' . string(extend(a:opts, { 'term_name': a:args })) . ')'
+  echo 'Running: ' . a:args
+  exec a:mods 'call term_start(' . string(a:args) . ', ' . string(extend(a:opts, { 'term_name': a:args })) . ')'
   let b:term_mods = a:mods
   let b:term_args = a:args
   let b:term_opts = a:opts
